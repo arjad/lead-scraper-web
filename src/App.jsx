@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'privacy' | 'terms'
   const [leads, setLeads] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -43,6 +43,24 @@ export default function App() {
   const [actioningIds, setActioningIds] = useState([]);
   const [simQuery, setSimQuery] = useState('Restaurants in Seattle');
   const [simImportCount, setSimImportCount] = useState(5);
+
+  // Monitor pathnames to route correctly without hash or query params
+  useEffect(() => {
+    const handleUrlRoute = () => {
+      const path = window.location.pathname;
+      if (path === '/privacy-policy') {
+        setCurrentView('privacy');
+      } else if (path === '/terms-of-service') {
+        setCurrentView('terms');
+      } else {
+        setCurrentView('dashboard');
+      }
+    };
+
+    handleUrlRoute();
+    window.addEventListener('popstate', handleUrlRoute);
+    return () => window.removeEventListener('popstate', handleUrlRoute);
+  }, []);
 
   useEffect(() => {
     const savedLeads = localStorage.getItem('lead_scraper_leads');
@@ -186,14 +204,22 @@ export default function App() {
     }
   };
 
+  // Push clean pathnames to history window
+  const navigateTo = (view) => {
+    let path = '/';
+    if (view === 'privacy') path = '/privacy-policy';
+    if (view === 'terms') path = '/terms-of-service';
+
+    window.history.pushState({}, '', path);
+    setCurrentView(view);
+  };
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', color: '#111827', display: 'flex', flexDirection: 'column' }}>
       <style>{`
-        /* Top Banner announcement bar */
         .announcement-bar { background: #064e3b; color: #dcfce7; text-align: center; padding: 8px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
         .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 48px; background: #ffffff; }
         .logo-group { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: #111827; }
-        .logo-circle { height: 32px; width: 32px; border-radius: 50%; border: 3.5px solid #22c55e; display: flex; align-items: center; justify-content: center; position: relative; }
         .nav-links { display: flex; gap: 32px; }
         .nav-link-item { color: #4b5563; font-weight: 500; font-size: 14px; text-decoration: none; cursor: pointer; background: none; border: none; padding: 0; }
         .nav-link-item:hover { color: #111827; }
@@ -247,7 +273,6 @@ export default function App() {
         .section-title { font-size: 18px; font-weight: 700; color: #111827; margin-top: 24px; margin-bottom: 10px; }
       `}</style>
 
-      {/* Top Banner announcement bar */}
       <div className="announcement-bar">
         This will be live soon
       </div>
@@ -258,19 +283,19 @@ export default function App() {
           <span>Lead Scraper</span>
         </div>
         <div className="nav-links">
-          <button className="nav-link-item" onClick={() => { setCurrentView('dashboard'); setActiveTab('leads'); }}>Overview</button>
-          <button className="nav-link-item" onClick={() => { setCurrentView('dashboard'); setActiveTab('settings'); }}>Settings</button>
-          <button className="nav-link-item" onClick={() => setCurrentView('privacy')}>Privacy</button>
-          <button className="nav-link-item" onClick={() => setCurrentView('terms')}>Terms</button>
+          <button className="nav-link-item" onClick={() => { navigateTo('dashboard'); setActiveTab('leads'); }}>Overview</button>
+          <button className="nav-link-item" onClick={() => { navigateTo('dashboard'); setActiveTab('settings'); }}>Settings</button>
+          <button className="nav-link-item" onClick={() => navigateTo('privacy')}>Privacy</button>
+          <button className="nav-link-item" onClick={() => navigateTo('terms')}>Terms</button>
         </div>
-        <button className="btn-purchase" onClick={() => { setCurrentView('dashboard'); setActiveTab('leads'); }}>Get Started</button>
+        <button className="btn-purchase" onClick={() => { navigateTo('dashboard'); setActiveTab('leads'); }}>Get Started</button>
       </div>
 
       {currentView === 'privacy' && (
         <div className="legal-box">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '16px', marginBottom: '24px' }}>
             <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, color: '#16a34a' }}>Privacy Policy</h1>
-            <button className="nav-btn active" onClick={() => setCurrentView('dashboard')}>&larr; Dashboard</button>
+            <button className="nav-btn active" onClick={() => navigateTo('dashboard')}>&larr; Dashboard</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', lineHeight: '1.6', color: '#4b5563' }}>
             <p style={{ color: '#6b7280', fontSize: '13px' }}>Effective Date: August 6, 2026</p>
@@ -291,7 +316,7 @@ export default function App() {
         <div className="legal-box">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '16px', marginBottom: '24px' }}>
             <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, color: '#16a34a' }}>Terms of Service</h1>
-            <button className="nav-btn active" onClick={() => setCurrentView('dashboard')}>&larr; Dashboard</button>
+            <button className="nav-btn active" onClick={() => navigateTo('dashboard')}>&larr; Dashboard</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', lineHeight: '1.6', color: '#4b5563' }}>
             <p style={{ color: '#6b7280', fontSize: '13px' }}>Effective Date: August 6, 2026</p>
@@ -404,7 +429,7 @@ export default function App() {
                     {leads.length === 0 ? (
                       <tr>
                         <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                          No lead items imported. Simulate extension imports above.
+                          No lead items imported. Use your Chrome extension to start collecting leads!
                         </td>
                       </tr>
                     ) : (
@@ -486,8 +511,8 @@ export default function App() {
       <footer style={{ marginTop: 'auto', borderTop: '1px solid #e2e8f0', padding: '24px 48px', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', background: '#f9fafb' }}>
         <span>&copy; 2026 Lead Scraper.</span>
         <div>
-          <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', marginRight: '12px' }} onClick={() => setCurrentView('privacy')}>Privacy Policy</button>
-          <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }} onClick={() => setCurrentView('terms')}>Terms of Service</button>
+          <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', marginRight: '12px' }} onClick={() => navigateTo('privacy')}>Privacy Policy</button>
+          <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }} onClick={() => navigateTo('terms')}>Terms of Service</button>
         </div>
       </footer>
     </div>
