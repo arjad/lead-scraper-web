@@ -1,50 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Shield, 
   FileText, 
-  Mail, 
   Search, 
-  Trash2, 
-  Settings2, 
   Database, 
   Globe, 
-  Sparkles, 
-  Layers,
-  ArrowLeft,
-  CheckCircle2,
-  AlertTriangle,
-  Play,
-  ArrowRight,
-  Info,
-  ExternalLink
+  ExternalLink,
+  Sun,
+  MapPin,
+  Clock,
+  Phone,
+  Mail,
+  Share2
 } from 'lucide-react';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'privacy' | 'terms'
-  const [leads, setLeads] = useState([]);
-  const [selectedIds, setSelectedIds] = useState([]);
-
-  const [smtp, setSmtp] = useState({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    user: '',
-    pass: ''
-  });
-
-  const [template, setTemplate] = useState({
-    subject: 'Collaboration Proposal - {{companyName}}',
-    body: 'Hi there,\n\nI found {{companyName}} on Google Maps. I love what you guys are doing and noticed you might benefit from our services.\n\nBest regards,\nLead Finder'
-  });
-
-  const [activeTab, setActiveTab] = useState('leads');
-  const [savingSettings, setSavingSettings] = useState(false);
-  const [settingsStatus, setSettingsStatus] = useState('');
-  const [actioningIds, setActioningIds] = useState([]);
-  const [simQuery, setSimQuery] = useState('Restaurants in Seattle');
-  const [simImportCount, setSimImportCount] = useState(5);
-
-  // Monitor pathnames to route correctly without hash or query params
+  const [currentView, setCurrentView] = useState('dashboard');
+  
   useEffect(() => {
     const handleUrlRoute = () => {
       const path = window.location.pathname;
@@ -62,149 +33,6 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleUrlRoute);
   }, []);
 
-  useEffect(() => {
-    const savedLeads = localStorage.getItem('lead_scraper_leads');
-    if (savedLeads) setLeads(JSON.parse(savedLeads));
-
-    const savedSmtp = localStorage.getItem('lead_scraper_smtp');
-    if (savedSmtp) setSmtp(JSON.parse(savedSmtp));
-
-    const savedTemplate = localStorage.getItem('lead_scraper_template');
-    if (savedTemplate) setTemplate(JSON.parse(savedTemplate));
-  }, []);
-
-  const saveLeadsToStorage = (updatedLeads) => {
-    setLeads(updatedLeads);
-    localStorage.setItem('lead_scraper_leads', JSON.stringify(updatedLeads));
-  };
-
-  const handleSaveSettings = (e) => {
-    e.preventDefault();
-    setSavingSettings(true);
-    setSettingsStatus('');
-    localStorage.setItem('lead_scraper_smtp', JSON.stringify(smtp));
-    localStorage.setItem('lead_scraper_template', JSON.stringify(template));
-    setTimeout(() => {
-      setSavingSettings(false);
-      setSettingsStatus('Settings saved successfully!');
-      setTimeout(() => setSettingsStatus(''), 3000);
-    }, 800);
-  };
-
-  const handleSimulateExtensionImport = () => {
-    const simulationData = [];
-    const industries = ['Bistro', 'Coffee Roasters', 'Agency', 'Legal Partners', 'Dentistry', 'Construction Corp', 'Gym & Fitness'];
-    const domains = ['seattlebistro.com', 'emeraldcitycoffee.com', 'soundmarketing.com', 'cascadelaw.com', 'dentistseattle.org', 'pacificbuilding.net', 'fitseattle.com'];
-    
-    for (let i = 0; i < simImportCount; i++) {
-      const name = `Seattle ${industries[Math.floor(Math.random() * industries.length)]} ${i + 1}`;
-      const domain = domains[Math.floor(Math.random() * domains.length)];
-      
-      simulationData.push({
-        id: Math.random().toString(36).substring(2, 9),
-        name,
-        query: simQuery,
-        website: `https://www.${domain}`,
-        phone: `+1 (206) 555-${Math.floor(1000 + Math.random() * 9000)}`,
-        address: `${Math.floor(100 + Math.random() * 999)} Pine St, Seattle, WA 98101`,
-        mapUrl: `https://google.com/maps/place/${encodeURIComponent(name)}`,
-        emailFromWebsite: '',
-        socials: { facebook: '', instagram: '', twitter: '', linkedin: '' },
-        scrapeStatus: 'idle',
-        emailStatus: 'idle',
-        emailSentAt: '',
-        createdAt: new Date().toISOString()
-      });
-    }
-    saveLeadsToStorage([...leads, ...simulationData]);
-  };
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedIds(leads.map(l => l.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectOne = (id) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter(x => x !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
-    }
-  };
-
-  const handleScrapeSelected = async () => {
-    if (selectedIds.length === 0) return;
-    setActioningIds(selectedIds);
-    const updated = [...leads];
-    
-    for (const id of selectedIds) {
-      const idx = updated.findIndex(l => l.id === id);
-      if (idx === -1) continue;
-      updated[idx].scrapeStatus = 'loading';
-      setLeads([...updated]);
-      await new Promise(resolve => setTimeout(resolve, 600));
-      const cleanName = updated[idx].name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-      const mockDomain = updated[idx].website ? updated[idx].website.replace('https://www.', '') : 'domain.com';
-      
-      updated[idx].emailFromWebsite = `contact@${mockDomain}`;
-      updated[idx].socials = {
-        facebook: `https://facebook.com/${cleanName}`,
-        instagram: `https://instagram.com/${cleanName}`,
-        linkedin: `https://linkedin.com/company/${cleanName}`,
-        twitter: `https://twitter.com/${cleanName}`
-      };
-      updated[idx].scrapeStatus = 'success';
-      setLeads([...updated]);
-    }
-    saveLeadsToStorage(updated);
-    setActioningIds([]);
-  };
-
-  const handleSendEmailsSelected = async () => {
-    if (selectedIds.length === 0) return;
-    if (!smtp.user || !smtp.pass) {
-      alert('Please fill out SMTP User and Password in Settings before sending.');
-      setActiveTab('settings');
-      return;
-    }
-    setActioningIds(selectedIds);
-    const updated = [...leads];
-    for (const id of selectedIds) {
-      const idx = updated.findIndex(l => l.id === id);
-      if (idx === -1) continue;
-      if (!updated[idx].emailFromWebsite) {
-        updated[idx].emailStatus = 'error';
-        setLeads([...updated]);
-        continue;
-      }
-      updated[idx].emailStatus = 'loading';
-      setLeads([...updated]);
-      await new Promise(resolve => setTimeout(resolve, 850));
-      updated[idx].emailStatus = 'sent';
-      updated[idx].emailSentAt = new Date().toISOString();
-      setLeads([...updated]);
-    }
-    saveLeadsToStorage(updated);
-    setActioningIds([]);
-  };
-
-  const handleDeleteLead = (id) => {
-    const updated = leads.filter(l => l.id !== id);
-    saveLeadsToStorage(updated);
-    setSelectedIds(selectedIds.filter(x => x !== id));
-  };
-
-  const handleClearAll = () => {
-    if (window.confirm('Are you sure you want to clear all leads?')) {
-      saveLeadsToStorage([]);
-      setSelectedIds([]);
-    }
-  };
-
-  // Push clean pathnames to history window
   const navigateTo = (view) => {
     let path = '/';
     if (view === 'privacy') path = '/privacy-policy';
@@ -215,304 +43,232 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', color: '#111827', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', color: '#111827', display: 'flex', flexDirection: 'column', fontFamily: '"Inter", sans-serif' }}>
       <style>{`
-        .announcement-bar { background: #064e3b; color: #dcfce7; text-align: center; padding: 8px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
-        .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 48px; background: #ffffff; }
-        .logo-group { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: #111827; }
-        .nav-links { display: flex; gap: 32px; }
-        .nav-link-item { color: #4b5563; font-weight: 500; font-size: 14px; text-decoration: none; cursor: pointer; background: none; border: none; padding: 0; }
-        .nav-link-item:hover { color: #111827; }
-        .btn-purchase { background: #111827; color: #ffffff; border: none; padding: 10px 20px; border-radius: 9999px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px; }
-        .btn-purchase:hover { background: #374151; }
-        .main-container { flex: 1; max-width: 1200px; width: 90%; margin: 0 auto 48px auto; display: flex; flex-direction: column; gap: 48px; }
+        body { margin: 0; padding: 0; background-color: #f9fafb; }
+        .announcement-bar { background: #00e65b; color: #000; text-align: center; padding: 10px 16px; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 24px 48px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 50; border-bottom: 1px solid rgba(0, 230, 91, 0.2); }
+        .logo-group { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 900; color: #111827; letter-spacing: -0.5px; }
+        .nav-links { display: flex; gap: 36px; }
+        .nav-link-item { color: #4b5563; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer; background: none; border: none; padding: 0; transition: color 0.2s; }
+        .nav-link-item:hover { color: #00cc52; }
+        .btn-purchase { background: #00e65b; color: #ffffff; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(0, 230, 91, 0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .btn-purchase:hover { background: #00cc52; box-shadow: 0 6px 20px rgba(0, 230, 91, 0.4); transform: translateY(-2px); }
         
-        .hero-section { display: grid; grid-template-columns: 1fr; gap: 48px; padding: 80px 0; align-items: center; }
-        @media(min-width: 992px) { .hero-section { grid-template-columns: 1.1fr 0.9fr; } }
+        .main-container { flex: 1; max-width: 1300px; width: 90%; margin: 0 auto 80px auto; display: flex; flex-direction: column; gap: 80px; }
+        
+        .hero-section { display: grid; grid-template-columns: 1fr; gap: 60px; padding: 100px 0 60px 0; align-items: center; }
+        @media(min-width: 1024px) { .hero-section { grid-template-columns: 1fr 1fr; } }
         .hero-left { display: flex; flex-direction: column; align-items: flex-start; }
-        .hero-tag { font-size: 12px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 24px; }
-        .hero-title { font-size: 56px; font-weight: 800; color: #111827; line-height: 1.1; margin: 0 0 24px 0; letter-spacing: -1.5px; }
-        .hero-desc { font-size: 16px; color: #6b7280; line-height: 1.6; margin: 0 0 32px 0; max-width: 480px; }
-        .hero-actions { display: flex; gap: 16px; align-items: center; }
-        .btn-lemon { background: #d9f99d; color: #1a2e05; border: none; padding: 14px 28px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
-        .btn-lemon:hover { background: #bef264; }
-        .btn-designer-view { background: transparent; border: none; color: #111827; font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: underline; }
-        .rating-badge { display: flex; align-items: center; gap: 8px; margin-top: 40px; font-size: 13px; font-weight: 600; color: #374151; }
-        .star-icon { color: #eab308; fill: #eab308; height: 14px; width: 14px; }
-        .hero-right { position: relative; display: flex; justify-content: center; }
-        .art-bg-box { width: 340px; height: 380px; background: #e6f9d3; border-radius: 12px; position: relative; overflow: visible; display: flex; align-items: flex-end; justify-content: center; }
-        .art-avatar { width: 90%; height: 95%; object-fit: cover; z-index: 2; filter: grayscale(100%); mix-blend-mode: multiply; }
-        .float-card { position: absolute; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); z-index: 10; display: flex; flex-direction: column; gap: 8px; }
-        .float-card-1 { bottom: -20px; left: -40px; width: 220px; }
-        .float-circle-indicator { position: absolute; top: 80px; right: -20px; height: 60px; width: 60px; border-radius: 50%; border: 3px dashed #14532d; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .hero-tag { font-size: 13px; font-weight: 800; color: #00b347; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 24px; display: inline-block; padding: 6px 12px; background: rgba(0, 230, 91, 0.1); border-radius: 4px; border: 1px solid rgba(0, 230, 91, 0.2); }
+        .hero-title { font-size: 64px; font-weight: 900; color: #111827; line-height: 1.05; margin: 0 0 24px 0; letter-spacing: -2px; }
+        .hero-title span { color: #00cc52; }
+        .hero-desc { font-size: 18px; color: #4b5563; line-height: 1.6; margin: 0 0 40px 0; max-width: 500px; }
+        .hero-actions { display: flex; gap: 20px; align-items: center; }
+        .btn-glow { background: transparent; border: 2px solid #00cc52; color: #00b347; padding: 12px 28px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 14px; transition: all 0.3s; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .btn-glow:hover { background: rgba(0, 204, 82, 0.05); box-shadow: 0 4px 14px rgba(0, 204, 82, 0.15); }
         
-        .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; }
-        .grid-3 { display: flex; flex-direction: column; gap: 24px; }
-        .btn-primary { background: #22c55e; color: #ffffff; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 14px; }
-        .btn-primary:hover { background: #16a34a; }
-        .btn-secondary { background: #dcfce7; color: #14532d; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 14px; }
-        .btn-secondary:hover { background: #bbf7d0; }
-        .input-text { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; background: #ffffff; font-size: 14px; outline: none; margin-top: 4px; box-sizing: border-box; }
-        .input-text:focus { border-color: #22c55e; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px; }
-        .stat-item { background: #ffffff; border: 1px solid #e5e7eb; padding: 16px; border-radius: 12px; text-align: center; }
-        .stat-value { font-size: 24px; font-weight: 800; color: #111827; }
-        .table-container { border: 1px solid #e5e7eb; border-radius: 12px; background: #ffffff; overflow: hidden; }
-        .table-actions { padding: 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .lead-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .lead-table th { background: #f9fafb; padding: 12px 16px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
-        .lead-table td { padding: 16px; border-bottom: 1px solid #f3f4f6; font-size: 14px; vertical-align: top; }
-        
-        .badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-block; }
-        .badge-idle { background: #e5e7eb; color: #374151; }
-        .badge-loading { background: #fef9c3; color: #713f12; }
-        .badge-success { background: #dcfce7; color: #14532d; }
-        .badge-error { background: #fee2e2; color: #991b1b; }
-        
-        .legal-box { max-width: 800px; width: 90%; margin: 40px auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); }
-        .section-title { font-size: 18px; font-weight: 700; color: #111827; margin-top: 24px; margin-bottom: 10px; }
+        .hero-right { position: relative; display: flex; justify-content: center; width: 100%; }
+        .image-stack { position: relative; width: 100%; max-width: 600px; height: 450px; }
+        .img-main { position: absolute; top: 0; right: 0; width: 85%; border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.1), 0 0 40px rgba(0,230,91,0.1); z-index: 2; transition: transform 0.3s ease; object-fit: cover; }
+        .img-main:hover { transform: translateY(-10px); }
+        .img-sub { position: absolute; bottom: 20px; left: 0; width: 70%; border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.15); z-index: 3; transition: transform 0.3s ease; object-fit: cover; }
+        .img-sub:hover { transform: translateY(-10px) scale(1.02); }
+
+        .feature-grid { display: grid; grid-template-columns: 1fr; gap: 32px; padding: 40px 0; }
+        @media(min-width: 768px) { .feature-grid { grid-template-columns: 1fr 1fr; } }
+        .feature-card { background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 40px; transition: all 0.3s ease; position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .feature-card:hover { border-color: rgba(0,230,91,0.3); transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0,230,91,0.1); }
+        .feature-icon-wrapper { height: 60px; width: 60px; background: rgba(0,230,91,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; color: #00b347; border: 1px solid rgba(0,230,91,0.2); }
+        .feature-title { font-size: 24px; font-weight: 800; color: #111827; margin-bottom: 16px; }
+        .feature-desc { font-size: 15px; color: #4b5563; line-height: 1.7; margin-bottom: 24px; }
+        .feature-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+        .feature-list li { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; font-weight: 600; }
+        .feature-list li svg { color: #00cc52; width: 16px; height: 16px; }
+
+        .footer { margin-top: auto; border-top: 1px solid rgba(0,0,0,0.05); padding: 40px 48px; display: flex; justify-content: space-between; font-size: 14px; color: #6b7280; background: #ffffff; }
       `}</style>
 
       <div className="announcement-bar">
-        This will be live soon
+        Welcome to the next generation of web scraping
       </div>
 
       <div className="header-bar">
         <div className="logo-group">
-          <img src="/logo.png" alt="Logo" style={{ height: '36px', width: 'auto', borderRadius: '4px' }} />
-          <span>Lead Scraper</span>
+          <img src="/logo.png" alt="Leeda Gen Pro Logo" style={{ height: '40px', width: 'auto', borderRadius: '8px' }} />
+          <span>LEEDA GEN <span style={{ color: '#00cc52' }}>PRO</span></span>
         </div>
         <div className="nav-links">
-          <button className="nav-link-item" onClick={() => { navigateTo('dashboard'); setActiveTab('leads'); }}>Overview</button>
-          <button className="nav-link-item" onClick={() => { navigateTo('dashboard'); setActiveTab('settings'); }}>Settings</button>
+          <button className="nav-link-item" onClick={() => navigateTo('dashboard')}>Home</button>
           <button className="nav-link-item" onClick={() => navigateTo('privacy')}>Privacy</button>
           <button className="nav-link-item" onClick={() => navigateTo('terms')}>Terms</button>
         </div>
-        <button className="btn-purchase" onClick={() => { navigateTo('dashboard'); setActiveTab('leads'); }}>Get Started</button>
+        <button className="btn-purchase" onClick={() => navigateTo('dashboard')}>Start Scraping</button>
       </div>
-
-      {currentView === 'privacy' && (
-        <div className="legal-box">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '16px', marginBottom: '24px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, color: '#16a34a' }}>Privacy Policy</h1>
-            <button className="nav-btn active" onClick={() => navigateTo('dashboard')}>&larr; Dashboard</button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', lineHeight: '1.6', color: '#4b5563' }}>
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>Effective Date: August 6, 2026</p>
-            <div style={{ padding: '20px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', color: '#14532d' }}>
-              <strong>We Do Not Sell Information</strong>: We strictly guarantee that we do not sell, license, distribute, share, or rent lead information, scraped emails, phone numbers, or user-provided SMTP credentials with any third-party marketing networks, brokers, or external databases. Your scraped maps data remains securely saved inside your client local storage and is never transmitted to us.
-            </div>
-            
-            <h3 className="section-title">1. Storage & Protection</h3>
-            <p>All extracted lead directories (names, addresses, websites, phone numbers) are processed entirely inside your local browser context. Your SMTP password and credentials are stored strictly in your browser Cache (localStorage) and never leave your machine.</p>
-
-            <h3 className="section-title">2. Outbound Operations</h3>
-            <p>Our automated mail sender establishes connection requests utilizing the SMTP servers configured inside your local panel. No email bodies, subjects, or addresses are cached outside your personal dashboard context.</p>
-          </div>
-        </div>
-      )}
-
-      {currentView === 'terms' && (
-        <div className="legal-box">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '16px', marginBottom: '24px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, color: '#16a34a' }}>Terms of Service</h1>
-            <button className="nav-btn active" onClick={() => navigateTo('dashboard')}>&larr; Dashboard</button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', lineHeight: '1.6', color: '#4b5563' }}>
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>Effective Date: August 6, 2026</p>
-            <div style={{ padding: '20px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', color: '#14532d' }}>
-              <strong>Acceptable Use & Anti-Spam compliance</strong>: You represent and warrant that all scraping operations and custom SMTP automated email cycles fully comply with the CAN-SPAM Act, GDPR, and other communications guidelines.
-            </div>
-            
-            <h3 className="section-title">1. Automated Crawling</h3>
-            <p>You agree not to request rapid scrapers or custom crawler volumes that could trigger IP blockades or overload target commercial website hosting resources.</p>
-
-            <h3 className="section-title">2. Service Disclaimer</h3>
-            <p>This software is provided "as is". We are not liable for any SMTP server blocks, domain suspension, blacklisted mailboxes, or target complaints resulting from your cold marketing outreach or data scraping practices.</p>
-          </div>
-        </div>
-      )}
 
       {currentView === 'dashboard' && (
         <div className="main-container">
           <div className="hero-section">
             <div className="hero-left">
-              <span className="hero-tag">Meet Lead Scraper</span>
+              <span className="hero-tag">Hyper-Scale Prospecting</span>
               <h1 className="hero-title">
-                Google Maps Lead Scraper Hub.
+                Uncover Leads with <span>Surgical Precision</span>.
               </h1>
               <p className="hero-desc">
-                Extract business listings directly from Google Maps, scrape websites on the backend to automatically capture contact emails, and launch automated cold sequences using your SMTP settings.
+                Extract high-value business data directly from Google Maps and execute deep-dives into individual company websites to capture comprehensive contact and intelligence data.
               </p>
               <div className="hero-actions">
-                <button className="btn-lemon" onClick={() => { setActiveTab('leads'); }}>
-                  <span>Launch Dashboard</span>
-                  <ExternalLink className="h-4 w-4" />
+                <button className="btn-purchase" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>Install Extension</span>
+                  <ExternalLink size={18} />
                 </button>
-                <button className="btn-designer-view" onClick={() => setActiveTab('settings')}>Configure SMTP</button>
-              </div>
-
-              <div className="rating-badge">
-                <span className="star-icon">★</span>
-                <span>Rated 4.9/5 from over 600 reviews.</span>
+                <button className="btn-glow">
+                  <span>View Documentation</span>
+                </button>
               </div>
             </div>
 
             <div className="hero-right">
-              <div className="art-bg-box">
-                <div className="float-circle-indicator">
-                  <span style={{ fontSize: '20px', fontWeight: '900', color: '#14532d' }}>L</span>
-                </div>
+              <div className="image-stack">
                 <img 
-                  className="art-avatar" 
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600" 
-                  alt="Business professional" 
+                  className="img-main" 
+                  src="/assets/Screenshot 2026-09-27 at 2.45.08 AM.png" 
+                  alt="Dashboard Interface"
+                  onError={(e) => { e.target.src = '/logo.png'; e.target.style.objectFit = 'contain'; e.target.style.padding = '40px'; e.target.style.background = '#f9fafb'; }}
                 />
-                
-                <div className="float-card float-card-1">
-                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#4b5563' }}>Google Maps Ext Sync</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                    <div style={{ height: '8px', width: '8px', borderRadius: '50%', background: '#22c55e' }} />
-                    <span style={{ fontSize: '13px', fontWeight: '800' }}>Active Parser Connected</span>
-                  </div>
-                </div>
+                <img 
+                  className="img-sub" 
+                  src="/assets/Screenshot 2026-09-27 at 2.39.55 AM.png" 
+                  alt="Scraping Details"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
               </div>
             </div>
           </div>
 
-          {activeTab === 'leads' ? (
-            <>
-              <div className="grid-3">
-                <div className="card">
-                  <h3 style={{ fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', color: '#4b5563', margin: '0 0 12px 0' }}>Campaign Metrics</h3>
-                  <div className="stats-grid">
-                    <div className="stat-item">
-                      <div className="stat-value">{leads.length}</div>
-                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>Imported</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-value" style={{ color: '#22c55e' }}>{leads.filter(l => l.scrapeStatus === 'success').length}</div>
-                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>Scraped</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-value" style={{ color: '#16a34a' }}>{leads.filter(l => l.emailStatus === 'sent').length}</div>
-                      <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>Emails Sent</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div style={{ textAlign: 'center', marginBottom: '-20px' }}>
+            <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#111827', letterSpacing: '-1px' }}>Dual-Engine <span style={{ color: '#00cc52' }}>Scraping Power</span></h2>
+            <p style={{ color: '#4b5563', fontSize: '16px', maxWidth: '600px', margin: '16px auto 0' }}>Our platform combines broad Google Maps extraction with deep-level website parsing to build the ultimate lead profile.</p>
+          </div>
 
-              <div className="table-container">
-                <div className="table-actions">
-                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#4b5563' }}>{selectedIds.length} items selected</span>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn-primary" disabled={selectedIds.length === 0} onClick={handleScrapeSelected}>Scrape Websites</button>
-                    <button className="btn-secondary" disabled={selectedIds.length === 0} onClick={handleSendEmailsSelected}>Auto Send Emails</button>
-                    <button className="btn-primary" style={{ background: '#fee2e2', color: '#991b1b' }} onClick={handleClearAll}>Clear All</button>
-                  </div>
-                </div>
-
-                <table className="lead-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '40px' }}>
-                        <input type="checkbox" onChange={handleSelectAll} checked={leads.length > 0 && selectedIds.length === leads.length} />
-                      </th>
-                      <th>Company Name</th>
-                      <th>Scraped Contact Info</th>
-                      <th>Source Phone</th>
-                      <th>Statuses</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leads.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                          No lead items imported. Use your Chrome extension to start collecting leads!
-                        </td>
-                      </tr>
-                    ) : (
-                      leads.map(lead => (
-                        <tr key={lead.id}>
-                          <td>
-                            <input type="checkbox" checked={selectedIds.includes(lead.id)} onChange={() => handleSelectOne(lead.id)} />
-                          </td>
-                          <td>
-                            <div style={{ fontWeight: '700' }}>{lead.name}</div>
-                            {lead.website && <a href={lead.website} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#2563eb' }}>{lead.website}</a>}
-                          </td>
-                          <td>
-                            {lead.emailFromWebsite ? <strong style={{ color: '#16a34a' }}>{lead.emailFromWebsite}</strong> : <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>No email</span>}
-                            <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '10px', color: '#22c55e' }}>
-                              {lead.socials?.facebook && <span>FB</span>}
-                              {lead.socials?.instagram && <span>IG</span>}
-                              {lead.socials?.linkedin && <span>LN</span>}
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ fontSize: '12px' }}>{lead.phone || 'N/A'}</div>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              <div>Scrape: <span className={`badge badge-${lead.scrapeStatus}`}>{lead.scrapeStatus}</span></div>
-                              <div>Email: <span className={`badge badge-${lead.emailStatus === 'sent' ? 'success' : lead.emailStatus}`}>{lead.emailStatus}</span></div>
-                            </div>
-                          </td>
-                          <td>
-                            <button onClick={() => handleDeleteLead(lead.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>Delete</button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+          <div className="feature-grid">
+            <div className="feature-card">
+              <div className="feature-icon-wrapper">
+                <MapPin size={28} />
               </div>
-            </>
-          ) : (
-            <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '16px' }}>SMTP & Email Configurations</h2>
-              <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <label style={{ fontSize: '12px', fontWeight: '600' }}>SMTP Host</label>
-                    <input className="input-text" type="text" value={smtp.host} onChange={e => setSmtp({ ...smtp, host: e.target.value })} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '12px', fontWeight: '600' }}>SMTP Port</label>
-                    <input className="input-text" type="number" value={smtp.port} onChange={e => setSmtp({ ...smtp, port: Number(e.target.value) })} />
-                  </div>
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600' }}>SMTP User (Username)</label>
-                  <input className="input-text" type="text" value={smtp.user} onChange={e => setSmtp({ ...smtp, user: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600' }}>SMTP Password</label>
-                  <input className="input-text" type="password" value={smtp.pass} onChange={e => setSmtp({ ...smtp, pass: e.target.value })} />
-                </div>
-                <hr style={{ border: 'none', borderBottom: '1px solid #e2e8f0', margin: '8px 0' }} />
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600' }}>Subject</label>
-                  <input className="input-text" type="text" value={template.subject} onChange={e => setTemplate({ ...template, subject: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600' }}>Body Text</label>
-                  <textarea rows={4} className="input-text" value={template.body} onChange={e => setTemplate({ ...template, body: e.target.value })} />
-                </div>
-                {settingsStatus && <div style={{ color: '#16a34a', fontWeight: '700', fontSize: '14px' }}>{settingsStatus}</div>}
-                <button type="submit" className="btn-primary">Save Settings</button>
-              </form>
+              <h3 className="feature-title">Google Maps Extraction</h3>
+              <p className="feature-desc">
+                Instantly pull thousands of business listings directly from Google Maps. Build your initial database with highly accurate, location-based business intelligence.
+              </p>
+              <ul className="feature-list">
+                <li><FileText /> Business Name & Category</li>
+                <li><Phone /> Direct Phone Numbers</li>
+                <li><Mail /> Publicly Listed Emails</li>
+                <li><Clock /> Accurate Open & Close Dates</li>
+              </ul>
             </div>
-          )}
+
+            <div className="feature-card">
+              <div className="feature-icon-wrapper">
+                <Globe size={28} />
+              </div>
+              <h3 className="feature-title">Deep Website Parsing</h3>
+              <p className="feature-desc">
+                Once initial leads are found, our secondary scraper navigates each business's website and contact pages to uncover hidden data points and social profiles.
+              </p>
+              <ul className="feature-list">
+                <li><Share2 /> Social Media Profiles (FB, IG, LinkedIn)</li>
+                <li><Search /> Contact Info Present on Website</li>
+                <li><Sun /> Local Weather & Contextual Details</li>
+                <li><Database /> Structured Contact Page Data</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '40px' }}>
+            <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#111827', letterSpacing: '-1px' }}>Our <span style={{ color: '#00cc52' }}>Clients</span></h2>
+            <p style={{ color: '#4b5563', fontSize: '16px', maxWidth: '600px', margin: '16px auto 0' }}>Join thousands of satisfied users from top agencies and sales teams.</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '32px', flexWrap: 'wrap', opacity: 0.8 }}>
+              <span style={{ fontSize: '24px', fontWeight: '800', color: '#374151' }}>TechCorp</span>
+              <span style={{ fontSize: '24px', fontWeight: '800', color: '#374151' }}>GlobalSales</span>
+              <span style={{ fontSize: '24px', fontWeight: '800', color: '#374151' }}>MarketLeads</span>
+              <span style={{ fontSize: '24px', fontWeight: '800', color: '#374151' }}>GrowthInc</span>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '80px' }}>
+            <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#111827', letterSpacing: '-1px' }}>Major <span style={{ color: '#00cc52' }}>Uses</span></h2>
+            <div className="feature-grid" style={{ marginTop: '20px' }}>
+              <div className="feature-card" style={{ padding: '30px', textAlign: 'left' }}>
+                <h3 className="feature-title" style={{ fontSize: '20px' }}>Cold Calling & Outreach</h3>
+                <p className="feature-desc" style={{ marginBottom: 0 }}>Easily get leads, phone numbers, and emails to streamline your cold calling efforts and maximize connection rates.</p>
+              </div>
+              <div className="feature-card" style={{ padding: '30px', textAlign: 'left' }}>
+                <h3 className="feature-title" style={{ fontSize: '20px' }}>Lead Generation Businesses</h3>
+                <p className="feature-desc" style={{ marginBottom: 0 }}>A powerful tool for lead generation businesses to get leads easily and free, helping you rapidly build lists and deliver high-quality prospects.</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      <footer style={{ marginTop: 'auto', borderTop: '1px solid #e2e8f0', padding: '24px 48px', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', background: '#f9fafb' }}>
-        <span>&copy; 2026 Lead Scraper.</span>
-        <div>
-          <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', marginRight: '12px' }} onClick={() => navigateTo('privacy')}>Privacy Policy</button>
-          <button style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }} onClick={() => navigateTo('terms')}>Terms of Service</button>
+      {currentView === 'privacy' && (
+        <div className="main-container" style={{ marginTop: '80px', maxWidth: '800px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '16px', padding: '48px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: '900', color: '#00b347', marginBottom: '24px' }}>Privacy Policy</h1>
+            <div style={{ color: '#4b5563', lineHeight: '1.8' }}>
+              <p style={{ fontWeight: '600' }}>Last updated: September 2026</p>
+              
+              <h3 style={{ color: '#111827', marginTop: '32px', marginBottom: '16px', fontSize: '20px' }}>1. Information We Collect</h3>
+              <p>When you use Leeda Gen Pro, we collect absolutely no data regarding your searches, targets, or scraped data. All data operations are securely handled locally within your client browser environment. We respect user privacy by maintaining zero server-side storage of your leads.</p>
+              
+              <h3 style={{ color: '#111827', marginTop: '32px', marginBottom: '16px', fontSize: '20px' }}>2. How We Use Information</h3>
+              <p>Any non-identifying telemetry data collected is used strictly to improve the functionality of our Chrome Extension and web interface. We do not sell, rent, or distribute any user metrics to third parties.</p>
+
+              <h3 style={{ color: '#111827', marginTop: '32px', marginBottom: '16px', fontSize: '20px' }}>3. Data Storage & Security</h3>
+              <p>Your data (including leads, emails, phone numbers, and SMTP credentials) is saved securely to your local machine (localStorage). It never touches our servers. It is your responsibility to secure your device.</p>
+              
+              <h3 style={{ color: '#111827', marginTop: '32px', marginBottom: '16px', fontSize: '20px' }}>4. Opt-Out Rights</h3>
+              <p>Because all scraping data remains local to your device, you have full control over your data footprint. Simply clear your browser cache or use our "Clear All" features to permanently destroy the lead databases you've accrued.</p>
+            </div>
+            <button className="btn-glow" style={{ marginTop: '40px' }} onClick={() => navigateTo('dashboard')}>Return to Dashboard</button>
+          </div>
+        </div>
+      )}
+
+      {currentView === 'terms' && (
+        <div className="main-container" style={{ marginTop: '80px', maxWidth: '800px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '16px', padding: '48px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: '900', color: '#00b347', marginBottom: '24px' }}>Terms of Service</h1>
+            <div style={{ color: '#4b5563', lineHeight: '1.8' }}>
+              <p style={{ fontWeight: '600' }}>Last updated: September 2026</p>
+              
+              <h3 style={{ color: '#111827', marginTop: '32px', marginBottom: '16px', fontSize: '20px' }}>1. Acceptance of Terms</h3>
+              <p>By accessing or using Leeda Gen Pro, you agree to be bound by these Terms. If you do not agree, you must cease use of our tools immediately.</p>
+              
+              <h3 style={{ color: '#111827', marginTop: '32px', marginBottom: '16px', fontSize: '20px' }}>2. Acceptable Use Policy</h3>
+              <p>You agree to use this software in compliance with all relevant local, federal, and international laws, including spam regulations and data protection acts (such as GDPR, CAN-SPAM, and CCPA). You agree not to request automated scrapers that could trigger IP blockades or overload target commercial website hosting resources.</p>
+              
+              <h3 style={{ color: '#111827', marginTop: '32px', marginBottom: '16px', fontSize: '20px' }}>3. Service Disclaimer</h3>
+              <p>This software is provided "as is" and without warranty. We are not liable for any SMTP server blocks, domain suspensions, or target complaints resulting from your cold marketing outreach or data scraping practices.</p>
+
+              <h3 style={{ color: '#111827', marginTop: '32px', marginBottom: '16px', fontSize: '20px' }}>4. Indemnification</h3>
+              <p>You agree to indemnify and hold harmless Leeda Gen Pro and its affiliates against any claims, damages, or legal actions arising from your misuse of the platform or violation of third-party terms of service.</p>
+            </div>
+            <button className="btn-glow" style={{ marginTop: '40px' }} onClick={() => navigateTo('dashboard')}>Return to Dashboard</button>
+          </div>
+        </div>
+      )}
+
+      <footer className="footer">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img src="/logo.png" alt="Logo" style={{ height: '20px', borderRadius: '4px' }} />
+          <span style={{ fontWeight: '700', color: '#111827' }}>LEEDA GEN <span style={{ color: '#00cc52' }}>PRO</span></span>
+          <span style={{ marginLeft: '12px' }}>&copy; 2026. All rights reserved.</span>
+        </div>
+        <div style={{ display: 'flex', gap: '24px' }}>
+          <button style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontWeight: '500' }} onClick={() => navigateTo('privacy')}>Privacy Policy</button>
+          <button style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontWeight: '500' }} onClick={() => navigateTo('terms')}>Terms of Service</button>
         </div>
       </footer>
     </div>
