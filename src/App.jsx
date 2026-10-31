@@ -95,8 +95,8 @@ export default function App() {
 
       <div className="header-bar">
         <div className="logo-group">
-          <img src="/logo.png" alt="Leeda Gen Pro Logo" style={{ height: '40px', width: 'auto', borderRadius: '8px' }} />
-          <span>LEEDA GEN <span style={{ color: '#00cc52' }}>PRO</span></span>
+          <img src="/logo.png" alt="AutoFill Forms Logo" style={{ height: '40px', width: 'auto', borderRadius: '8px' }} />
+          <span>AUTO<span style={{ color: '#00cc52' }}>FILL</span> FORMS</span>
         </div>
         <div className="nav-links">
           <button className="nav-link-item" onClick={() => navigateTo('dashboard')}>Home</button>
@@ -110,16 +110,16 @@ export default function App() {
         <div className="main-container">
           <div className="hero-section">
             <div className="hero-left">
-              <span className="hero-tag">Hyper-Scale Prospecting</span>
+              <span className="hero-tag">Instant Form Autofill</span>
               <h1 className="hero-title">
-                Uncover Leads with <span>Surgical Precision</span>.
+                Instantly Autofill Any Form with <span>AI-Powered Precision</span>.
               </h1>
               <p className="hero-desc">
                 Extract high-value business data directly from Google Maps and execute deep-dives into individual company websites to capture comprehensive contact and intelligence data.
               </p>
               <div className="hero-actions">
                 <button className="btn-purchase" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>Install Extension</span>
+                  <span>Add to Chrome</span>
                   <ExternalLink size={18} />
                 </button>
                 <button className="btn-glow">
@@ -263,7 +263,7 @@ export default function App() {
       <footer className="footer">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img src="/logo.png" alt="Logo" style={{ height: '20px', borderRadius: '4px' }} />
-          <span style={{ fontWeight: '700', color: '#111827' }}>LEEDA GEN <span style={{ color: '#00cc52' }}>PRO</span></span>
+          <span style={{ fontWeight: '700', color: '#111827' }}>AUTO<span style={{ color: '#00cc52' }}>FILL</span> FORMS</span>
           <span style={{ marginLeft: '12px' }}>&copy; 2026. All rights reserved.</span>
         </div>
         <div style={{ display: 'flex', gap: '24px' }}>
