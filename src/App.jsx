@@ -115,7 +115,7 @@ export default function App() {
                 Instantly Autofill Any Form with <span>AI-Powered Precision</span>.
               </h1>
               <p className="hero-desc">
-                Extract high-value business data directly from Google Maps and execute deep-dives into individual company websites to capture comprehensive contact and intelligence data.
+                Automatically fill job applications, QA forms, and more using your stored personal information. The AI learns from each page to improve accuracy over time.
               </p>
               <div className="hero-actions">
                 <button className="btn-purchase" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -132,13 +132,13 @@ export default function App() {
               <div className="image-stack">
                 <img 
                   className="img-main" 
-                  src="/assets/Screenshot 2026-09-27 at 2.45.08 AM.png" 
+                  src="/Users/mac/.gemini/antigravity-ide/brain/3213d114-dd63-4c71-9d41-5ac3ebe6934c/autofill_main_1793474259214.jpg" 
                   alt="Dashboard Interface"
                   onError={(e) => { e.target.src = '/logo.png'; e.target.style.objectFit = 'contain'; e.target.style.padding = '40px'; e.target.style.background = '#f9fafb'; }}
                 />
                 <img 
                   className="img-sub" 
-                  src="/assets/Screenshot 2026-09-27 at 2.39.55 AM.png" 
+                  src="/Users/mac/.gemini/antigravity-ide/brain/3213d114-dd63-4c71-9d41-5ac3ebe6934c/autofill_main_1793474259214.jpg" 
                   alt="Scraping Details"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
@@ -147,8 +147,8 @@ export default function App() {
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: '-20px' }}>
-            <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#111827', letterSpacing: '-1px' }}>Dual-Engine <span style={{ color: '#00cc52' }}>Scraping Power</span></h2>
-            <p style={{ color: '#4b5563', fontSize: '16px', maxWidth: '600px', margin: '16px auto 0' }}>Our platform combines broad Google Maps extraction with deep-level website parsing to build the ultimate lead profile.</p>
+            <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#111827', letterSpacing: '-1px' }}>Powerful <span style={{ color: '#00cc52' }}>Autofill Engine</span></h2>
+            <p style={{ color: '#4b5563', fontSize: '16px', maxWidth: '600px', margin: '16px auto 0' }}>Leverage AI to detect any web form and instantly populate it with your personal data, learning and adapting with each use.</p>
           </div>
 
           <div className="feature-grid">
@@ -156,15 +156,15 @@ export default function App() {
               <div className="feature-icon-wrapper">
                 <MapPin size={28} />
               </div>
-              <h3 className="feature-title">Google Maps Extraction</h3>
+              <h3 className="feature-title">Smart Form Detection</h3>
               <p className="feature-desc">
-                Instantly pull thousands of business listings directly from Google Maps. Build your initial database with highly accurate, location-based business intelligence.
+                Automatically identifies any form fields on a page, mapping them to your stored profile information for seamless autofill.
               </p>
               <ul className="feature-list">
-                <li><FileText /> Business Name & Category</li>
-                <li><Phone /> Direct Phone Numbers</li>
-                <li><Mail /> Publicly Listed Emails</li>
-                <li><Clock /> Accurate Open & Close Dates</li>
+                <li><FileText /> Detects input fields across websites</li>
+                <li><Phone /> Maps phone number fields</li>
+                <li><Mail /> Populates email addresses</li>
+                <li><Clock /> Handles date and time entries</li>
               </ul>
             </div>
 
@@ -172,15 +172,15 @@ export default function App() {
               <div className="feature-icon-wrapper">
                 <Globe size={28} />
               </div>
-              <h3 className="feature-title">Deep Website Parsing</h3>
+              <h3 className="feature-title">AI-Powered Autofill</h3>
               <p className="feature-desc">
-                Once initial leads are found, our secondary scraper navigates each business's website and contact pages to uncover hidden data points and social profiles.
+                Uses machine learning to understand context and accurately fill complex forms, continuously improving from user feedback.
               </p>
               <ul className="feature-list">
-                <li><Share2 /> Social Media Profiles (FB, IG, LinkedIn)</li>
-                <li><Search /> Contact Info Present on Website</li>
-                <li><Sun /> Local Weather & Contextual Details</li>
-                <li><Database /> Structured Contact Page Data</li>
+                <li><Share2 /> Learns from previous submissions</li>
+                <li><Search /> Handles dynamic fields</li>
+                <li><Sun /> Adapts to locale-specific formats</li>
+                <li><Database /> Securely stores user profiles locally</li>
               </ul>
             </div>
           </div>
